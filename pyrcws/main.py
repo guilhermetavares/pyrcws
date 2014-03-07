@@ -1,11 +1,11 @@
 # coding: utf-8
-import logging
 import urllib
 import urllib2
+import os
 from suds import WebFault
+from pki import X509PemFileCertificate
 from suds.client import Client
 from util import moneyfmt
-
 
 # logging.basicConfig(level=logging.INFO)
 # logging.getLogger('suds.client').setLevel(logging.DEBUG)
@@ -16,16 +16,23 @@ from util import moneyfmt
 
 # URLS config
 # service
-SERVICE_URL = 'https://ecommerce.redecard.com.br/pos_virtual/wskomerci'  # remove trailing slash
+SERVICE_URL = 'https://ecommerce.redecard.com.br/pos_virtual/wskomerci'
+
 # sandbox false
 SOAP_URL = '%s/cap.asmx' % SERVICE_URL
 WSDL_SOAP_URL = '%s?wsdl' % SOAP_URL
+
 # sandbox true
 SOAP_URL_TEST = '%s/cap_teste.asmx' % SERVICE_URL
 WSDL_SOAP_URL_TEST = '%s?wsdl' % SOAP_URL_TEST
+
 # return
 RECEIPT_URL = 'https://ecommerce.redecard.com.br/pos_virtual/cupom.asp'
 
+# cer certificate
+APP_PATH = os.path.abspath(os.path.dirname(__file__))
+CERTIFICATE_PATH = os.path.join(
+    APP_PATH, 'redecard.cer')
 
 DEFAULT_TRANSACTION_TYPE = 'shop'
 TRANSACTION_TYPE = {
@@ -91,14 +98,30 @@ class PaymentAttempt(object):
         self.card_holders_name = card_holders_name
 
         self.client = self._get_connection(debug)
+
         self._authorized = False
 
         self.debug = debug
 
     def _get_connection(self, debug=False):
+        from suds.transport.https import HttpAuthenticated
+        transport = HttpAuthenticated()
+        transport.cert = X509PemFileCertificate(
+            CERTIFICATE_PATH)
+
         if debug:
-            return Client(WSDL_SOAP_URL_TEST, location=SOAP_URL_TEST, cache=None)
-        return Client(WSDL_SOAP_URL, location=SOAP_URL, cache=None)
+            return Client(
+                WSDL_SOAP_URL_TEST,
+                location=SOAP_URL_TEST,
+                cache=None,
+                transport=transport,
+            )
+        return Client(
+            WSDL_SOAP_URL,
+            location=SOAP_URL,
+            cache=None,
+            transport=transport,
+        )
 
     def _get_total(self):
         # sandbox transactions must be total = 0.01
