@@ -3,15 +3,9 @@ import urllib
 import urllib2
 import os
 from suds import WebFault
-from pki import X509PemFileCertificate
 from suds.client import Client
 from util import moneyfmt
-
-# logging.basicConfig(level=logging.INFO)
-# logging.getLogger('suds.client').setLevel(logging.DEBUG)
-# logging.getLogger('suds.transport').setLevel(logging.DEBUG)
-# logging.getLogger('suds.xsd.schema').setLevel(logging.DEBUG)
-# logging.getLogger('suds.wsdl').setLevel(logging.DEBUG)
+from transport import getTransport
 
 
 # URLS config
@@ -104,24 +98,18 @@ class PaymentAttempt(object):
         self.debug = debug
 
     def _get_connection(self, debug=False):
-        from suds.transport.https import HttpAuthenticated
-        transport = HttpAuthenticated()
-        transport.cert = X509PemFileCertificate(
-            CERTIFICATE_PATH)
 
+        WSDL_URL = WSDL_SOAP_URL
         if debug:
-            return Client(
-                WSDL_SOAP_URL_TEST,
-                location=SOAP_URL_TEST,
-                cache=None,
-                transport=transport,
-            )
+            WSDL_URL = WSDL_SOAP_URL_TEST
+
+        transport = getTransport(CERTIFICATE_PATH)
+
         return Client(
-            WSDL_SOAP_URL,
-            location=SOAP_URL,
+            WSDL_URL,
+            location=WSDL_URL,
             cache=None,
-            transport=transport,
-        )
+            transport=transport,)
 
     def _get_total(self):
         # sandbox transactions must be total = 0.01
