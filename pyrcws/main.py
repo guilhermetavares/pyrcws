@@ -25,8 +25,7 @@ RECEIPT_URL = 'https://ecommerce.redecard.com.br/pos_virtual/cupom.asp'
 
 # cer certificate
 APP_PATH = os.path.abspath(os.path.dirname(__file__))
-CERTIFICATE_PATH = os.path.join(
-    APP_PATH, 'redecard.cer')
+CERTIFICATE_PATH = os.path.join(APP_PATH, 'ecommerce.redecard.cer')
 
 DEFAULT_TRANSACTION_TYPE = 'shop'
 TRANSACTION_TYPE = {
